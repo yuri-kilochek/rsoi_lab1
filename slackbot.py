@@ -38,8 +38,11 @@ def authentication():
             'code': code,
             'redirect_uri': redirect_uri,
         }).json()
-        access_token = data['access_token']
-        return 'Access token: {}'.format(access_token)
+        token = data['access_token']
+
+        return requests.get('https://slack.com/api/auth.test', params={
+            'token': token,
+        }).text
 
 app.run(port=local_port, debug=True)
 
