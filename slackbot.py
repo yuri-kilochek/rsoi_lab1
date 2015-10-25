@@ -19,11 +19,23 @@ app = flask.Flask(__name__)
 def index():
     return requests.get('https://slack.com/api/api.test').text + '''
         <hr>
-        <a href="/authentication">Log in!</a>
+        <a href="/do_auth">Log in!</a>
     '''
+
+token = None
+
+@app.route('/do_auth', methods=['GET'])
+def do_auth():
+    query = urlencode({
+        'client_id': client_id,
+        'redirect_uri': redirect_uri,
+    })
+    return flask.redirect('https://slack.com/oauth/authorize?' + query)
 
 @app.route('/authentication', methods=['GET'])
 def authentication():
+    global token
+
     args = flask.request.args
 
     if 'error' in args:
@@ -39,16 +51,11 @@ def authentication():
             'redirect_uri': redirect_uri,
         }).json()
         token = data['access_token']
+    
+    return requests.get('https://slack.com/api/auth.test', params={
+        'token': token,
+    }).text
 
-        return requests.get('https://slack.com/api/auth.test', params={
-            'token': token,
-        }).text
-
-    query = urlencode({
-        'client_id': client_id,
-        'redirect_uri': redirect_uri,
-    })
-    return flask.redirect('https://slack.com/oauth/authorize?' + query)
 
 app.run(port=local_port, debug=True)
 
